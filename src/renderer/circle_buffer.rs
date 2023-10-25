@@ -1,16 +1,14 @@
 use wasm_bindgen::JsCast;
+use wasm_bindgen::prelude::wasm_bindgen;
 use web_sys::{AngleInstancedArrays, WebGlRenderingContext, WebGlProgram, WebGlBuffer};
 use crate::math::Vec3f;
+use crate::util::log;
+use crate::util::LogLevel::Warning;
 
 pub struct VertexData{
     pub position: Vec3f
 }
 
-impl VertexData{
-    pub fn as_float_array(&self) -> [f32; 3] {
-        [self.position.x, self.position.y, self.position.z]
-    }
-}
 #[derive(Copy, Clone)]
 pub struct InstanceData{
     pub center_x: f32,
@@ -21,17 +19,13 @@ pub struct CircleBuffer{
     pub vertices: Vec<VertexData>,
     vertex_buffer: WebGlBuffer,
     pub instances: Vec<InstanceData>,
-    instance_array: WebGlBuffer, 
-    pub ext: AngleInstancedArrays,
+    instance_array: WebGlBuffer
 }
 
 impl CircleBuffer{
     const MAX_CIRCLES: usize = 1000;
 
     pub fn new(gl: &WebGlRenderingContext, shader_program: &WebGlProgram) -> CircleBuffer {
-        // enable the instanced rendering extension
-        let ext: AngleInstancedArrays = gl.get_extension("ANGLE_instanced_arrays").unwrap().unwrap().dyn_into().unwrap();
-
         //static vertices for the circle
         let vertices = CircleBuffer::new_vertex_data();
         let vertex_buffer = CircleBuffer::new_vertex_array(gl, &vertices, shader_program);
@@ -43,7 +37,7 @@ impl CircleBuffer{
                             vertex_buffer,
                             instances,
                             instance_array,
-                            ext};
+                            };
     }
 
     // cast Vec<T> -> &[f32]
@@ -129,7 +123,7 @@ impl CircleBuffer{
         );
     }
 
-    pub fn render(&self, gl: &WebGlRenderingContext){
+    pub fn render(&self, gl: &WebGlRenderingContext, ext: &AngleInstancedArrays){
         gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&self.instance_array));
         let instances_array = unsafe { js_sys::Float32Array::view(CircleBuffer::get_buffer_ref(&self.instances)) };
         gl.buffer_data_with_array_buffer_view(
@@ -137,6 +131,6 @@ impl CircleBuffer{
             &instances_array,
             WebGlRenderingContext::DYNAMIC_DRAW,
         );
-        self.ext.draw_arrays_instanced_angle(WebGlRenderingContext::TRIANGLE_FAN, 0, 4, self.instances.len() as i32);
+        ext.draw_arrays_instanced_angle(WebGlRenderingContext::TRIANGLE_FAN, 0, 4, self.instances.len() as i32);
     }
 }
