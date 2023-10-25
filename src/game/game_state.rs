@@ -26,7 +26,7 @@ impl GameState {
         self.render_context.dispatch_draw();
     }
 
-    pub fn on_click(&mut self, x: i32, y: i32) {
+    pub fn on_click(&mut self, _x: i32, _y: i32) {
 
     }
 }

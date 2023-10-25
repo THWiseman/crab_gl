@@ -26,6 +26,7 @@ extern "C" {
     pub fn vertex_attrib_divisor_angle(this: &AngleInstancedArrays, index: u32, divisor: u32);
 }
 
+#[allow(unused)]
 pub struct Context{
     canvas_id: String,
     document: Document,

@@ -14,6 +14,7 @@ pub struct InstanceData{
     pub center_y: f32,
 }
 
+#[allow(unused)]
 pub struct CircleBuffer{
     pub vertices: Vec<VertexData>,
     vertex_buffer: WebGlBuffer,

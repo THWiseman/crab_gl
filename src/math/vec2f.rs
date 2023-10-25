@@ -4,6 +4,7 @@ pub struct Vec2f {
     y: f32,
 }
 
+#[allow(unused)]
 impl Vec2f {
     pub fn new(x: f32, y: f32) -> Self {
         Vec2f { x, y }

@@ -6,6 +6,3 @@ pub use vec4f::Vec4f;
 
 pub mod vec2f;
 pub use vec2f::Vec2f;
-
-pub mod random;
-pub use random::random;
