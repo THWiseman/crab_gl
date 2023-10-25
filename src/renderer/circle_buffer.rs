@@ -1,9 +1,8 @@
-use js_sys::Math::random;
 use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
 use crate::math::Vec3f;
 use crate::renderer::context::AngleInstancedArrays;
-use crate::util::log;
-use crate::util::LogLevel;
+use crate::game::game_state::MAX_PARTICLES;
+
 pub struct VertexData{
     pub position: Vec3f
 }
@@ -23,20 +22,13 @@ pub struct CircleBuffer{
 }
 
 impl CircleBuffer{
-    const MAX_CIRCLES: usize = 10;
-
     pub fn new(gl: &WebGlRenderingContext, shader_program: &WebGlProgram, ext: &AngleInstancedArrays) -> CircleBuffer {
         //static vertices for the circle
         let vertices = CircleBuffer::new_vertex_data();
         let vertex_buffer = CircleBuffer::new_vertex_array(gl, &vertices, shader_program);
 
         //buffer for the instance data that will change every frame
-        let mut instances: Vec<InstanceData> = vec![InstanceData{center_x: 0.0, center_y: 0.0}; CircleBuffer::MAX_CIRCLES];
-        for InstanceData {center_x, center_y} in instances.iter_mut(){
-            *center_x = CircleBuffer::uniform_float_dist(-1.0, 1.0);
-            *center_y = CircleBuffer::uniform_float_dist(-1.0, 1.0);
-            log(&format!("Circle: {}, {}", center_x, center_y), LogLevel::Warning);
-        }
+        let instances: Vec<InstanceData> = vec![InstanceData{center_x: 0.0, center_y: 0.0}; MAX_PARTICLES];
         let instance_array = CircleBuffer::new_instance_array(gl, CircleBuffer::get_buffer_ref(&instances), shader_program, ext);
         return CircleBuffer{vertices,
                             vertex_buffer,
@@ -112,6 +104,10 @@ impl CircleBuffer{
         return id;
     }
 
+    pub fn get_mutable_instances(&mut self) -> &mut Vec<InstanceData>{
+        return &mut self.instances;
+    }
+
     pub fn buffer_instances(&self, gl: &WebGlRenderingContext){
         gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&self.instance_array));
         let instances_array = unsafe { js_sys::Float32Array::view(CircleBuffer::get_buffer_ref(&self.instances)) };
@@ -121,14 +117,4 @@ impl CircleBuffer{
             WebGlRenderingContext::DYNAMIC_DRAW,
         );
     }
-
-    fn lerp(a: f32, b: f32, t: f32) -> f32 {
-        a + (b - a) * t
-    }
-
-    pub fn uniform_float_dist(min: f32, max: f32) -> f32 {
-        return Self::lerp(min, max, random() as f32); //NB: This is calling a JS function
-    }
-
-
 }

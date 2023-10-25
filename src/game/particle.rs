@@ -11,12 +11,12 @@ impl Particle {
         Particle { position, velocity }
     }
 
-    pub fn get_position(&self) -> Vec2f {
-        self.position
+    pub fn get_position(&self) -> &Vec2f {
+        &self.position
     }
 
-    pub fn get_velocity(&self) -> Vec2f {
-        self.velocity
+    pub fn get_velocity(&self) -> &Vec2f {
+        &self.velocity
     }
 
     pub fn set_position(&mut self, position: Vec2f) {

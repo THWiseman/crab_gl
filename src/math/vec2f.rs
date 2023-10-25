@@ -1,7 +1,8 @@
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec2f {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 #[allow(unused)]

@@ -4,6 +4,7 @@ use web_sys::{WebGlRenderingContext, WebGlProgram, Document, HtmlCanvasElement};
 use wasm_bindgen::JsValue;
 use crate::renderer::setup_shaders;
 use crate::math::Vec4f;
+use crate::renderer::circle_buffer::InstanceData;
 
 use super::CircleBuffer;
 
@@ -108,5 +109,9 @@ impl Context {
     pub fn dispatch_draw(&self){
         self.buffer.buffer_instances(&self.context);
         self.ext.draw_arrays_instanced_angle(WebGlRenderingContext::TRIANGLE_FAN, 0, 4, self.buffer.instances.len() as i32).expect("Failed to draw circles");
+    }
+
+    pub fn get_mutable_instances(&mut self) -> &mut Vec<InstanceData>{
+        return self.buffer.get_mutable_instances();
     }
 }
