@@ -20,10 +20,8 @@ impl VertexBuffer{
             WebGlRenderingContext::STATIC_DRAW,
         );
 
-        gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&id)); //TODO: Remove this line?
-
         // Enable the coordinates attribute
-        let coordinates_location = gl.get_attrib_location(&shader_program, "coordinates");
+        let coordinates_location = gl.get_attrib_location(&shader_program, "position");
         gl.vertex_attrib_pointer_with_i32(
             coordinates_location as u32,
             3,
@@ -36,10 +34,12 @@ impl VertexBuffer{
         return VertexBuffer { handle: id }
     }
 
+    #[allow(dead_code)]
     fn bind(&self, gl: &WebGlRenderingContext){
         gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&self.handle));
     }
 
+    #[allow(dead_code)]
     fn buffer_data(gl: &WebGlRenderingContext, vertices: &[f32]){
         let vertices_array = unsafe { js_sys::Float32Array::view(&vertices) };
         gl.buffer_data_with_array_buffer_view(
@@ -51,5 +51,5 @@ impl VertexBuffer{
 }
 
 pub fn setup_vertices(gl: &WebGlRenderingContext, vertices: &[f32], shader_program: &WebGlProgram) {
-    let vertex_buffer = VertexBuffer::new(gl, vertices, shader_program);
+    let _vertex_buffer = VertexBuffer::new(gl, vertices, shader_program);
 }

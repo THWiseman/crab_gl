@@ -1,14 +1,8 @@
 
-#[derive(Error, Debug)]
-enum Error {
-    #[error("I/O error: {0}")]
+pub enum Error {
     IoError(std::io::Error),
-
-    #[error("Parsing error: {0}")]
     ParseError(std::num::ParseIntError),
-
-    #[error("Custom error: {0}")]
-    CustomError(string)
+    CustomError(String)
 }
 
 impl From<std::io::Error> for Error {
@@ -20,5 +14,11 @@ impl From<std::io::Error> for Error {
 impl From<std::num::ParseIntError> for Error {
     fn from(error: std::num::ParseIntError) -> Self {
         Error::ParseError(error)
+    }
+}
+
+impl From<String> for Error {
+    fn from(error: String) -> Self {
+        Error::CustomError(error)
     }
 }

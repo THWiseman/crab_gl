@@ -1,11 +1,11 @@
-import init, { draw_triangle } from "../pkg/crab_gl.js";
+import init, { draw_triangle, draw_circles } from "../pkg/crab_gl.js";
 
 const CANVAS_ID = "triangle";
 
 async function run() {
   await init();
   const color = [1.0, 0.0, 0.0, 1.0];
-  draw_triangle(CANVAS_ID, color);
+  draw_circles(CANVAS_ID, color);
 }
 
 run();
