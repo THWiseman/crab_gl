@@ -1,10 +1,9 @@
-use wasm_bindgen::JsCast;
-use wasm_bindgen::prelude::wasm_bindgen;
-use web_sys::{AngleInstancedArrays, WebGlRenderingContext, WebGlProgram, WebGlBuffer};
+use js_sys::Math::random;
+use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
 use crate::math::Vec3f;
+use crate::renderer::context::AngleInstancedArrays;
 use crate::util::log;
-use crate::util::LogLevel::Warning;
-
+use crate::util::LogLevel;
 pub struct VertexData{
     pub position: Vec3f
 }
@@ -23,16 +22,21 @@ pub struct CircleBuffer{
 }
 
 impl CircleBuffer{
-    const MAX_CIRCLES: usize = 1000;
+    const MAX_CIRCLES: usize = 10;
 
-    pub fn new(gl: &WebGlRenderingContext, shader_program: &WebGlProgram) -> CircleBuffer {
+    pub fn new(gl: &WebGlRenderingContext, shader_program: &WebGlProgram, ext: &AngleInstancedArrays) -> CircleBuffer {
         //static vertices for the circle
         let vertices = CircleBuffer::new_vertex_data();
         let vertex_buffer = CircleBuffer::new_vertex_array(gl, &vertices, shader_program);
 
         //buffer for the instance data that will change every frame
-        let instances = vec![InstanceData{center_x: 0.0, center_y: 0.0}; CircleBuffer::MAX_CIRCLES];
-        let instance_array = CircleBuffer::new_instance_array(gl, CircleBuffer::get_buffer_ref(&instances), shader_program);
+        let mut instances: Vec<InstanceData> = vec![InstanceData{center_x: 0.0, center_y: 0.0}; CircleBuffer::MAX_CIRCLES];
+        for InstanceData {center_x, center_y} in instances.iter_mut(){
+            *center_x = CircleBuffer::uniform_float_dist(-1.0, 1.0);
+            *center_y = CircleBuffer::uniform_float_dist(-1.0, 1.0);
+            log(&format!("Circle: {}, {}", center_x, center_y), LogLevel::Warning);
+        }
+        let instance_array = CircleBuffer::new_instance_array(gl, CircleBuffer::get_buffer_ref(&instances), shader_program, ext);
         return CircleBuffer{vertices,
                             vertex_buffer,
                             instances,
@@ -85,7 +89,7 @@ impl CircleBuffer{
         return id;
     }
 
-    fn new_instance_array(gl: &WebGlRenderingContext, vertices: &[f32], shader_program: &WebGlProgram) -> WebGlBuffer {
+    fn new_instance_array(gl: &WebGlRenderingContext, vertices: &[f32], shader_program: &WebGlProgram, ext: &AngleInstancedArrays) -> WebGlBuffer {
         // Create the OpenGL bufer and get a handle
         let id: WebGlBuffer = gl.create_buffer().unwrap();
 
@@ -103,27 +107,11 @@ impl CircleBuffer{
         let offset_attrib = gl.get_attrib_location(&shader_program, "offset") as u32;
         gl.enable_vertex_attrib_array(offset_attrib);
         gl.vertex_attrib_pointer_with_i32(offset_attrib, 2, WebGlRenderingContext::FLOAT, false, 0, 0);
-        let etx_angle: web_sys::AngleInstancedArrays = WebGlRenderingContext::get_extension(&gl, "ANGLE_instanced_arrays").unwrap().unwrap().dyn_into().unwrap();
-        etx_angle.vertex_attrib_divisor_angle(offset_attrib, 1);
+        ext.vertex_attrib_divisor_angle(offset_attrib, 1);
         return id;
     }
 
-    #[allow(dead_code)]
-    fn bind(&self, gl: &WebGlRenderingContext){
-        gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&self.vertex_buffer));
-    }
-
-    #[allow(dead_code)]
-    fn buffer_data(gl: &WebGlRenderingContext, vertices: &[f32]){
-        let vertices_array = unsafe { js_sys::Float32Array::view(&vertices) };
-        gl.buffer_data_with_array_buffer_view(
-            WebGlRenderingContext::ARRAY_BUFFER,
-            &vertices_array,
-            WebGlRenderingContext::STATIC_DRAW,
-        );
-    }
-
-    pub fn render(&self, gl: &WebGlRenderingContext, ext: &AngleInstancedArrays){
+    pub fn buffer_instances(&self, gl: &WebGlRenderingContext){
         gl.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&self.instance_array));
         let instances_array = unsafe { js_sys::Float32Array::view(CircleBuffer::get_buffer_ref(&self.instances)) };
         gl.buffer_data_with_array_buffer_view(
@@ -131,6 +119,15 @@ impl CircleBuffer{
             &instances_array,
             WebGlRenderingContext::DYNAMIC_DRAW,
         );
-        ext.draw_arrays_instanced_angle(WebGlRenderingContext::TRIANGLE_FAN, 0, 4, self.instances.len() as i32);
     }
+
+    fn lerp(a: f32, b: f32, t: f32) -> f32 {
+        a + (b - a) * t
+    }
+
+    pub fn uniform_float_dist(min: f32, max: f32) -> f32 {
+        return Self::lerp(min, max, random() as f32); //NB: This is calling a JS function
+    }
+
+
 }

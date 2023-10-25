@@ -1,27 +1,31 @@
-import init, { draw_triangle, draw_circles } from "../pkg/crab_gl.js";
+import init, { create_game } from "../pkg/crab_gl.js";
 
 const CANVAS_ID = "triangle";
 
-async function run() {
-  await init();
-  const color = [1.0, 0.0, 0.0, 1.0];
-  draw_circles(CANVAS_ID, color);
-}
+let renderCanvas = document.getElementById(CANVAS_ID);
+let gameState;
 
-run();
+init().then( () => {
+    gameState = create_game(CANVAS_ID);
+    renderCanvas.addEventListener("click", e =>
+        gameState.click(e.offsetX, e.offsetY));
+    requestAnimationFrame(onFrame)
+});
+
+function onFrame() {
+    requestAnimationFrame(onFrame);
+    gameState.on_frame();
+}
 
 const colorChangerForm = document.getElementById("color-changer");
 colorChangerForm.addEventListener("submit", (e) => {
   e.preventDefault();
-
   const color = [
     clampRGBValue(e.target.elements.red.value),
     clampRGBValue(e.target.elements.green.value),
     clampRGBValue(e.target.elements.blue.value),
     1.0,
   ];
-
-  draw_triangle(CANVAS_ID, color);
 });
 
 function clampRGBValue(value) {
