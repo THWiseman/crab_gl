@@ -108,7 +108,7 @@ impl Context {
 
     pub fn dispatch_draw(&self){
         self.buffer.buffer_instances(&self.context);
-        self.ext.draw_arrays_instanced_angle(WebGlRenderingContext::TRIANGLE_FAN, 0, 4, self.buffer.instances.len() as i32).expect("Failed to draw circles");
+        self.ext.draw_arrays_instanced_angle(WebGlRenderingContext::TRIANGLE_FAN, 0, 32, self.buffer.instances.len() as i32).expect("Failed to draw circles");
     }
 
     pub fn get_mutable_instances(&mut self) -> &mut Vec<InstanceData>{

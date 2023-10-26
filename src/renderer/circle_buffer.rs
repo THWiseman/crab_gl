@@ -1,7 +1,7 @@
 use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
+use crate::game;
 use crate::math::Vec3f;
 use crate::renderer::context::AngleInstancedArrays;
-use crate::game::game_state::MAX_PARTICLES;
 
 pub struct VertexData{
     pub position: Vec3f
@@ -28,7 +28,7 @@ impl CircleBuffer{
         let vertex_buffer = CircleBuffer::new_vertex_array(gl, &vertices, shader_program);
 
         //buffer for the instance data that will change every frame
-        let instances: Vec<InstanceData> = vec![InstanceData{center_x: 0.0, center_y: 0.0}; MAX_PARTICLES];
+        let instances: Vec<InstanceData> = vec![InstanceData{center_x: 0.0, center_y: 0.0}; game::game_state::DEFAULT_MAX_PARTICLES];
         let instance_array = CircleBuffer::new_instance_array(gl, CircleBuffer::get_buffer_ref(&instances), shader_program, ext);
         return CircleBuffer{vertices,
                             vertex_buffer,
@@ -44,12 +44,22 @@ impl CircleBuffer{
         unsafe { std::slice::from_raw_parts(ptr, len) }
     }
 
+    fn generate_circle_points(center: Vec3f, radius: f32, n: usize) -> Vec<VertexData> {
+        let mut points = Vec::new();
+    
+        for i in 0..n {
+            let angle = 2.0 * std::f32::consts::PI * (i as f32) / (n as f32);
+            let x = center.x + radius * angle.cos();
+            let y = center.y + radius * angle.sin();
+            let z = 0.;
+            points.push(VertexData{position:Vec3f{ x, y, z }});
+        }
+    
+        points
+    }
+
     fn new_vertex_data() -> Vec<VertexData> {
-        let v0 = VertexData{position: Vec3f::new(-0.1, -0.1, 0.0)};
-        let v1 = VertexData{position: Vec3f::new(0.1, -0.1, 0.0)};
-        let v2 = VertexData{position: Vec3f::new(0.1, 0.1, 0.0)};
-        let v3 = VertexData{position: Vec3f::new(-0.1, 0.1, 0.0)};
-        return vec![v0, v1, v2, v3];
+        return CircleBuffer::generate_circle_points(Vec3f::new(0.0, 0.0, 0.0), 0.2, 32);
     }
 
     fn new_vertex_array(gl: &WebGlRenderingContext, vertices: &Vec<VertexData>, shader_program: &WebGlProgram) -> WebGlBuffer {
