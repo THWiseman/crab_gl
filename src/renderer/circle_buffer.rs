@@ -29,7 +29,6 @@ impl CircleBuffer{
         let a = world_to_gl(game::game_state::DEFAULT_BOUNDS, Vec2f::new(0., 0.));
         let b = world_to_gl(game::game_state::DEFAULT_BOUNDS, Vec2f::new(game::game_state::DEFAULT_PARTICLE_RADIUS, 0.));
         let radius = (b.subtract(&a)).length();
-        log(&format!("Radiu: {:?}", radius), crate::util::LogLevel::Warning);
         let vertices = CircleBuffer::generate_circle_points(Vec3f::new(0., 0., 0.), radius, 32);
         let vertex_buffer = CircleBuffer::new_vertex_array(gl, &vertices, shader_program);
 

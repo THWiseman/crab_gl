@@ -20,17 +20,19 @@ pub struct ConfigState {
     pub repulsion_force: f32,
     pub collision_damping: f32,
     pub friction: f32,
-    pub time_multiplier: f32
+    pub time_multiplier: f32,
+    pub spatial_partition_size: f32,
 }
 pub const DEFAULT_BOUNDS: Vec2i = Vec2i{ x: 800, y: 800 };
-pub const DEFAULT_MAX_PARTICLES: usize = 90;
-pub const DEFAULT_PARTICLE_RADIUS: f32 = 30.;
+pub const DEFAULT_MAX_PARTICLES: usize = 1000;
+pub const DEFAULT_PARTICLE_RADIUS: f32 = 5.;
 pub const DEFAULT_GRAVITY_VECTOR: Vec2f = Vec2f{ x: 0.0, y: -9.8 };
 pub const DEFAULT_WALL_DAMPING: f32 = 0.9;
 pub const DEFAULT_REPULSION_FORCE: f32 = 10.;
 pub const DEFAULT_COLLISION_DAMPING: f32 = 0.9;
-pub const DEFAULT_FRICTION: f32 = 0.98;
+pub const DEFAULT_FRICTION: f32 = 0.999;
 pub const DEFAULT_TIME_MULTIPLIER: f32 = 3.0;
+pub const DEFAULT_SPATIAL_PARTITION_SIZE: f32 = 100.;
 
 impl ConfigState{
     fn new() -> ConfigState{
@@ -43,7 +45,8 @@ impl ConfigState{
         let collision_damping = DEFAULT_COLLISION_DAMPING;
         let friction = DEFAULT_FRICTION;
         let time_multiplier = DEFAULT_TIME_MULTIPLIER;
-        return ConfigState{bounds, max_particles, particle_radius, gravity_vector, wall_damping, repulsion_force, collision_damping, friction, time_multiplier }
+        let spatial_partition_size = DEFAULT_SPATIAL_PARTITION_SIZE;
+        return ConfigState{ bounds, max_particles, particle_radius, gravity_vector, wall_damping, repulsion_force, collision_damping, friction, time_multiplier, spatial_partition_size }
     }
 }
 
@@ -71,14 +74,18 @@ impl GameState {
     }
 
     pub fn on_click(&mut self, _x: i32, _y: i32) {
-
+        let mut physics_simulation = World::new(ConfigState::new());
+        for _ in 0..DEFAULT_MAX_PARTICLES {
+            physics_simulation.create_particle();
+        }
+        self.physics_simulation = physics_simulation;
     }
 
     fn update_render_state(&mut self){
         let particles = self.physics_simulation.get_particles();
         let instances = self.render_context.get_mutable_instances();
         for (i, particle) in particles.iter().enumerate() {
-            let position = world_to_gl(self.physics_simulation.config.bounds, particle.get_position());
+            let position = world_to_gl(self.physics_simulation.config.bounds, particle.world_position);
             instances[i].center_x = position.x;
             instances[i].center_y = position.y;
         }

@@ -11,7 +11,7 @@ init().then( () => {
     date = new Date();
     gameState = create_game(CANVAS_ID);
     renderCanvas.addEventListener("click", e =>
-        gameState.click(e.offsetX, e.offsetY));
+        gameState.on_click(e.offsetX, e.offsetY));
     requestAnimationFrame(onFrame)
 });
 
