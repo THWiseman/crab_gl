@@ -18,6 +18,13 @@ impl Vec2f {
         }
     }
 
+    pub fn subtract(&self, other: &Self) -> Self {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y
+        }
+    }
+
     pub fn scale(&self, scalar: f32) -> Self {
         Self {
             x: self.x * scalar,

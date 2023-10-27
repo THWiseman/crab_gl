@@ -1,10 +1,9 @@
 use wasm_bindgen::prelude::*;
-use crate::{renderer::Context, util::log};
-use crate::game::world::World;
+use crate::{renderer::Context, util};
+use crate::game::world::*;
 use console_error_panic_hook;
 use std::panic;
 use crate::math::{Vec2i, Vec2f};
-use crate::util;
 
 #[wasm_bindgen]
 pub struct GameState {
@@ -20,14 +19,18 @@ pub struct ConfigState {
     pub wall_damping: f32,
     pub repulsion_force: f32,
     pub collision_damping: f32,
+    pub friction: f32,
+    pub time_multiplier: f32
 }
 pub const DEFAULT_BOUNDS: Vec2i = Vec2i{ x: 800, y: 800 };
-pub const DEFAULT_MAX_PARTICLES: usize = 10;
-pub const DEFAULT_PARTICLE_RADIUS: f32 = 0.01;
+pub const DEFAULT_MAX_PARTICLES: usize = 90;
+pub const DEFAULT_PARTICLE_RADIUS: f32 = 30.;
 pub const DEFAULT_GRAVITY_VECTOR: Vec2f = Vec2f{ x: 0.0, y: -9.8 };
 pub const DEFAULT_WALL_DAMPING: f32 = 0.9;
-pub const DEFAULT_REPULSION_FORCE: f32 = 5000.;
+pub const DEFAULT_REPULSION_FORCE: f32 = 10.;
 pub const DEFAULT_COLLISION_DAMPING: f32 = 0.9;
+pub const DEFAULT_FRICTION: f32 = 0.98;
+pub const DEFAULT_TIME_MULTIPLIER: f32 = 3.0;
 
 impl ConfigState{
     fn new() -> ConfigState{
@@ -38,7 +41,9 @@ impl ConfigState{
         let wall_damping = DEFAULT_WALL_DAMPING;
         let repulsion_force = DEFAULT_REPULSION_FORCE;
         let collision_damping = DEFAULT_COLLISION_DAMPING;
-        return ConfigState{bounds, max_particles, particle_radius, gravity_vector, wall_damping, repulsion_force, collision_damping}
+        let friction = DEFAULT_FRICTION;
+        let time_multiplier = DEFAULT_TIME_MULTIPLIER;
+        return ConfigState{bounds, max_particles, particle_radius, gravity_vector, wall_damping, repulsion_force, collision_damping, friction, time_multiplier }
     }
 }
 
@@ -60,8 +65,6 @@ impl GameState {
     }
 
     pub fn on_frame(&mut self, dt: f32) {
-        log("Frame", util::LogLevel::Warning);
-
         self.physics_simulation.step(dt);
         self.update_render_state();
         self.render_context.dispatch_draw();
@@ -75,7 +78,7 @@ impl GameState {
         let particles = self.physics_simulation.get_particles();
         let instances = self.render_context.get_mutable_instances();
         for (i, particle) in particles.iter().enumerate() {
-            let position = particle.get_position();
+            let position = world_to_gl(self.physics_simulation.config.bounds, particle.get_position());
             instances[i].center_x = position.x;
             instances[i].center_y = position.y;
         }

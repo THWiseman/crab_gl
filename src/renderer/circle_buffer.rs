@@ -1,7 +1,9 @@
 use web_sys::{WebGlRenderingContext, WebGlProgram, WebGlBuffer};
 use crate::game;
-use crate::math::Vec3f;
+use crate::game::world::world_to_gl;
+use crate::math::{Vec3f, Vec2f};
 use crate::renderer::context::AngleInstancedArrays;
+use crate::util::log;
 
 pub struct VertexData{
     pub position: Vec3f
@@ -24,7 +26,11 @@ pub struct CircleBuffer{
 impl CircleBuffer{
     pub fn new(gl: &WebGlRenderingContext, shader_program: &WebGlProgram, ext: &AngleInstancedArrays) -> CircleBuffer {
         //static vertices for the circle
-        let vertices = CircleBuffer::new_vertex_data();
+        let a = world_to_gl(game::game_state::DEFAULT_BOUNDS, Vec2f::new(0., 0.));
+        let b = world_to_gl(game::game_state::DEFAULT_BOUNDS, Vec2f::new(game::game_state::DEFAULT_PARTICLE_RADIUS, 0.));
+        let radius = (b.subtract(&a)).length();
+        log(&format!("Radiu: {:?}", radius), crate::util::LogLevel::Warning);
+        let vertices = CircleBuffer::generate_circle_points(Vec3f::new(0., 0., 0.), radius, 32);
         let vertex_buffer = CircleBuffer::new_vertex_array(gl, &vertices, shader_program);
 
         //buffer for the instance data that will change every frame
@@ -56,10 +62,6 @@ impl CircleBuffer{
         }
     
         points
-    }
-
-    fn new_vertex_data() -> Vec<VertexData> {
-        return CircleBuffer::generate_circle_points(Vec3f::new(0.0, 0.0, 0.0), 0.2, 32);
     }
 
     fn new_vertex_array(gl: &WebGlRenderingContext, vertices: &Vec<VertexData>, shader_program: &WebGlProgram) -> WebGlBuffer {

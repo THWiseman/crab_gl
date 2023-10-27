@@ -4,7 +4,6 @@ const CANVAS_ID = "triangle";
 const FIXED_TIMESTEP = 0.01;
 let renderCanvas = document.getElementById(CANVAS_ID);
 let gameState;
-let dt = 0.;
 let date;
 let accumulator = 0.;
 
@@ -25,8 +24,6 @@ function onFrame() {
         gameState.on_frame(FIXED_TIMESTEP);
         accumulator -= FIXED_TIMESTEP;
     }
-    
-    gameState.on_frame(dt);
     date = now;
 }
 

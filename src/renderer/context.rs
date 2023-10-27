@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
+use web_sys::WebGl2RenderingContext;
 use web_sys::{WebGlRenderingContext, WebGlProgram, Document, HtmlCanvasElement};
 use wasm_bindgen::JsValue;
 use crate::renderer::setup_shaders;
@@ -107,6 +108,8 @@ impl Context {
     }
 
     pub fn dispatch_draw(&self){
+        self.context.clear_color(0.0, 0.0, 0.0, 1.0);
+        self.context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT);
         self.buffer.buffer_instances(&self.context);
         self.ext.draw_arrays_instanced_angle(WebGlRenderingContext::TRIANGLE_FAN, 0, 32, self.buffer.instances.len() as i32).expect("Failed to draw circles");
     }
