@@ -21,9 +21,10 @@ function onFrame() {
     let elapsed = (now - date) / 1000;
     accumulator += elapsed;
     while (accumulator >= FIXED_TIMESTEP) {
-        gameState.on_frame(FIXED_TIMESTEP);
+        gameState.update(FIXED_TIMESTEP);
         accumulator -= FIXED_TIMESTEP;
     }
+    gameState.render();
     date = now;
 }
 

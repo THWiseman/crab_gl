@@ -67,8 +67,11 @@ impl GameState {
         }
     }
 
-    pub fn on_frame(&mut self, dt: f32) {
+    pub fn update(&mut self, dt: f32) {
         self.physics_simulation.step(dt);
+    }
+
+    pub fn render(&mut self) {
         self.update_render_state();
         self.render_context.dispatch_draw();
     }
