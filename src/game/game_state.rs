@@ -24,7 +24,7 @@ pub struct ConfigState {
     pub spatial_partition_size: f32,
 }
 pub const DEFAULT_BOUNDS: Vec2i = Vec2i{ x: 800, y: 800 };
-pub const DEFAULT_MAX_PARTICLES: usize = 1000;
+pub const DEFAULT_MAX_PARTICLES: usize = 1500;
 pub const DEFAULT_PARTICLE_RADIUS: f32 = 5.;
 pub const DEFAULT_GRAVITY_VECTOR: Vec2f = Vec2f{ x: 0.0, y: -9.8 };
 pub const DEFAULT_WALL_DAMPING: f32 = 0.9;

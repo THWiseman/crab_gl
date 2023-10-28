@@ -88,29 +88,20 @@ impl World {
     }
 
     pub fn get_neighbors(spatial_partition: &HashMap<(i32, i32), Vec<i32>>, spatial_coordinates: (i32, i32), particle_index: i32) -> Vec<i32> {
-        let top_left = spatial_partition.get(&(spatial_coordinates.0 - 1, spatial_coordinates.1 - 1));
-        let top = spatial_partition.get(&(spatial_coordinates.0, spatial_coordinates.1 - 1));
-        let top_right = spatial_partition.get(&(spatial_coordinates.0 + 1, spatial_coordinates.1 - 1));
-        let left = spatial_partition.get(&(spatial_coordinates.0 - 1, spatial_coordinates.1));
-        let right = spatial_partition.get(&(spatial_coordinates.0 + 1, spatial_coordinates.1));
-        let bottom_left = spatial_partition.get(&(spatial_coordinates.0 - 1, spatial_coordinates.1 + 1));
-        let bottom = spatial_partition.get(&(spatial_coordinates.0, spatial_coordinates.1 + 1));
-        let bottom_right = spatial_partition.get(&(spatial_coordinates.0 + 1, spatial_coordinates.1 + 1));
-        let middle = spatial_partition.get(&spatial_coordinates);
-        
-        let neighbors: Vec<Option<&Vec<i32>>> = vec![top_left, top, top_right, left, middle, right, bottom_left, bottom, bottom_right];
-        let mut indexes: Vec<i32> = Vec::new();
-        neighbors.iter().for_each(|neighbor_opt|  {
-            if neighbor_opt.is_some() {
-                let neighbor_list = neighbor_opt.unwrap();
-                neighbor_list.iter().for_each(|neighbor_index| {
-                    if *neighbor_index != particle_index {
-                        indexes.push(neighbor_index.clone());
+        let mut neighbors = Vec::new();
+        for dx in -1..=2 {
+            for dy in -1..=2 {
+                if let Some(cell) = spatial_partition.get(&(spatial_coordinates.0 + dx, spatial_coordinates.1 + dy)) {
+                    for neighbor in cell {
+                        if neighbor != &particle_index
+                        {
+                            neighbors.push(neighbor.clone());
+                        }
                     }
-                });
+                }
             }
-        });
-        return indexes;
+        }
+        neighbors
     }
 
     pub fn get_particles(&self) -> &Vec<Particle> {
@@ -126,7 +117,11 @@ impl World {
         });
 
         World::solve_overlap(&mut self.particles, &self.spatial_partition,  self.config.particle_radius);
-        World::clear_spatial_partitions(&mut self.spatial_partition, self.config.bounds, self.config.spatial_partition_size);
+        //World::solve_overlap_n2(&mut self.particles, self.config.particle_radius);
+        for (_, value) in self.spatial_partition.iter_mut() {
+            value.clear();
+        }
+        //World::clear_spatial_partitions(&mut self.spatial_partition, self.config.bounds, self.config.spatial_partition_size);
 
         let num_particles = self.particles.len();
         for i in 0..num_particles {
@@ -148,9 +143,42 @@ impl World {
             let particle_a_vel = particles[a_index].velocity;
             let particle_a_spatial_coordinates = particles[a_index].current_spatial_partition;
 
-            let neighbors = World::get_neighbors(spatial_partition, particle_a_spatial_coordinates, a_index as i32);
-            for neighbor in neighbors {
-                let b_index: usize = neighbor as usize;
+            for dx in -1..=1 {
+                for dy in -1..=1 {
+                    if let Some(cell) = spatial_partition.get(&(particle_a_spatial_coordinates.0 + dx, particle_a_spatial_coordinates.1 + dy)) {
+                        for neighbor in cell {
+                            if *neighbor != a_index as i32
+                            {
+                                let b_index: usize = *neighbor as usize;
+                                let particle_b_pos = particles[b_index].world_position;
+                                let particle_b_vel = particles[b_index].velocity;
+                                let distance = World::distance(particle_a_pos, particle_b_pos);
+                                if distance < 2.0 * particle_radius {
+                                    let overlap = (2.0 * particle_radius) - distance;
+                                    let direction = particle_a_pos.subtract(&particle_b_pos).normalized();
+                
+                                    particles[a_index].world_position = particle_a_pos.add(&direction.scale(overlap / 2.0));
+                                    particles[a_index].velocity = particle_a_vel.add(&direction.scale(overlap / 2.0));
+                
+                                    particles[b_index].world_position = particle_b_pos.add(&direction.scale(-overlap / 2.0));
+                                    particles[b_index].velocity = particle_b_vel.add(&direction.scale(-overlap / 2.0));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn solve_overlap_n2(particles: &mut Vec<Particle>, particle_radius: f32) {
+        for a_index in 0..particles.len() {
+            let particle_a_pos = particles[a_index].world_position;
+            let particle_a_vel = particles[a_index].velocity;
+            for b_index in 0..particles.len() {
+                if a_index == b_index {
+                    continue;
+                }
                 let particle_b_pos = particles[b_index].world_position;
                 let particle_b_vel = particles[b_index].velocity;
 
